@@ -1,14 +1,18 @@
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
 from sources import CentralBankSource
 from datetime import datetime
 import os
 
+force = ForceReply(True, True)
 central = CentralBankSource()
+
+
 def say_hi(bot, update):
     chat_id = update.message.chat_id
     bot.send_message(chat_id, 'Salam!')
     bot.send_photo()
+
 
 def parse_msg(msg):
     msg: str = msg[10:]
@@ -37,6 +41,23 @@ def try_parse_message(msg):
     return True, money, curr_from, curr_to
 
 
+def try_parse_reply_message(msg):
+    # /exchange 58.82 asd azn
+    parts = msg.split()
+
+    if len(parts) != 3:
+        return False, "Format düzgün deyil. Nümunə format: 100 usd azn"
+
+    money, curr_from, curr_to = parts
+
+    try:
+        money = float(money)
+    except ValueError:
+        return False, f"{money} - rəqəm deyil"
+
+    return True, money, curr_from, curr_to
+
+
 def exchange_money(bot, update):
     chat_id = update.message.chat_id
     msg = update.message.text
@@ -51,7 +72,7 @@ def exchange_money(bot, update):
 def exchange_money2(bot, update):
     chat_id = update.message.chat_id
     msg = update.message.text
-    success, *args = try_parse_message(msg)
+    success, *args = try_parse_reply_message(msg)
 
     if not success:
         error_msg = args[0]
@@ -121,8 +142,12 @@ def button(bot, update):
         start(bot, query)
     else:
         #query.edit_message_text(text="Selected option: {}".format(query.data))
-        bot.send_message(chat_id, "Hal-hazırda işlək deyil 😢")
-        start(bot, query)
+        bot.send_message(chat_id, 'Valyuta kalkulyatoru', reply_markup=force)
+
+
+def reply_everything(bot,update):
+    if update.message.reply_to_message.text == 'Valyuta kalkulyatoru':
+        exchange_money2(bot, update)
 
 
 token = os.environ['curr_token']
@@ -135,6 +160,7 @@ updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CallbackQueryHandler(button))
 updater.dispatcher.add_handler(rates_handler)
 updater.dispatcher.add_handler(exchange_handler)
+updater.dispatcher.add_handler(MessageHandler(filters=Filters.text, callback=reply_everything))
 updater.start_polling()
 
 updater.idle()
