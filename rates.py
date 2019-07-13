@@ -1,6 +1,7 @@
-from sources import CurrencyAzSource
+from sources import CurrencyAzSource, CentralBankSource
+from datetime import datetime
 
-currency_az = CurrencyAzSource()
+currency_az = CentralBankSource()
 
 yes_no = 'y'
 
@@ -45,3 +46,4 @@ while yes_no.lower() == 'y':
     yes_no = input('Do you want to continue? (y/n): ')
 
 print('bye...')
+

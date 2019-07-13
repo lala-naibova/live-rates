@@ -1,5 +1,6 @@
 import requests
 import re
+from datetime import datetime
 
 
 class CurrencyAzSource:
@@ -29,14 +30,38 @@ class CurrencyAzSource:
         else:
             return False, f'There isn\'t any currency  type as {curr.upper()}. Try again'
 
+
 class CentralBankSource:
 
+    def build_url(self):
+        now = datetime.now()
+        new_day = now.strftime('%d.%m.%Y')
+        return f'https://www.cbar.az/currencies/{new_day}.xml'
+
     def get_rate(self, currency):
-        pass
+        if currency.upper() == 'AZN':
+            return 1
+        pattern = r'<Valute Code="(?P<valute>{})">\n.+\n.+\n +<Value>(?P<value>[0-9]+\.[0-9]+)'.format(currency)
+        response = requests.get(self.build_url())
+        content = response.content.decode()
+        match = re.search(pattern, content, re.IGNORECASE)
+        return float(match.group('value'))
 
     def get_supported_currencies(self):
-        pass
+        pattern = r'<Valute Code="(?P<valute>[a-z]+)">\n.+\n.+\n +<Value>(?P<value>[0-9]+\.[0-9]+)'
+        response = requests.get(self.build_url())
+        content = response.content.decode()
+        matches = re.findall(pattern, content, re.IGNORECASE)
+        valutes = ['AZN']
+        for match in matches:
+            valutes.append(match[0])
+        return valutes
 
     def is_alive(self):
         pass
 
+    def validate_currency(self, curr):
+        if curr in self.get_supported_currencies():
+            return True, 'valid'
+        else:
+            return False, f'There isn\'t any currency  type as {curr.upper()}. Try again'
