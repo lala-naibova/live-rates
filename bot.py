@@ -1,4 +1,5 @@
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from sources import CentralBankSource
 from datetime import datetime
 import os
@@ -81,6 +82,7 @@ def exchange_money2(bot, update):
         response_msg = f"{money} {from_curr} = {result} {to_curr}"
         bot.send_message(chat_id, response_msg)
 
+
 def message_format(rates):
     now = datetime.now()
     date = now.strftime('%d.%m.%Y')
@@ -99,12 +101,38 @@ def send_all_rates(bot, update):
     bot.send_message(chat_id,message_format(all_rates))
 
 
+def start(bot, update):
+    keyboard = [[InlineKeyboardButton("Məzənnələr", callback_data='rates'),
+                 InlineKeyboardButton("Valyuta kalkulyatoru", callback_data='exchange')]]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    bot.send_message(update.message.chat_id, "Əməliyyatlar:", reply_markup=reply_markup)
+
+
+def button(bot, update):
+    query = update.callback_query
+    chat_id = update.effective_user.id
+    if query.data == 'rates':
+        all_rates = central.get_all_rates()
+        msg = message_format(all_rates)
+        #query.edit_message_text(msg)
+        bot.send_message(chat_id, msg)
+        start(bot, query)
+    else:
+        #query.edit_message_text(text="Selected option: {}".format(query.data))
+        bot.send_message(chat_id, "Hal-hazırda işlək deyil 😢")
+        start(bot, query)
+
+
 token = os.environ['curr_token']
 updater = Updater(token)
 
 rates_handler = CommandHandler('rates', send_all_rates)
 exchange_handler = CommandHandler('exchange', exchange_money2)
 
+updater.dispatcher.add_handler(CommandHandler('start', start))
+updater.dispatcher.add_handler(CallbackQueryHandler(button))
 updater.dispatcher.add_handler(rates_handler)
 updater.dispatcher.add_handler(exchange_handler)
 updater.start_polling()
