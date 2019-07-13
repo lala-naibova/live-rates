@@ -1,34 +1,47 @@
-import requests
-import re
+from sources import CurrencyAzSource
 
-
-def get_rate(currency):
-
-    if currency.lower() == 'azn':
-        return 1
-
-    request = requests.get('http://currency.az')
-    content = request.content.decode()
-    pattern = f'[a-z <">=]+1 {currency}[a-z /"<>=-]+(?P<rate>[0-9.]+) AZN'
-    match = re.search(pattern, content, re.IGNORECASE)
-    result = match.group('rate')
-    return float(result)
-
+currency_az = CurrencyAzSource()
 
 yes_no = 'y'
+
+
+def get_currency_input(src, message):
+    curr = input(message)
+
+    is_valid, error = src.validate_currency(curr.upper())
+
+    while not is_valid:
+        print(error)
+        curr = input(message)
+        is_valid, error = src.validate_currency(curr.upper())
+
+    return curr
+
+
+def number_input(msg):
+    num = input(msg)
+    while not num.isnumeric():
+        print(f"{num} - is not a NUMBER!!!")
+        num = input(msg)
+    return float(num)
+
+
 while yes_no.lower() == 'y':
-    cur1 = input('From:')
-    cur2 = input('To:')
-    if cur1.lower() == cur2.lower():
+
+    cur_from = get_currency_input(currency_az, 'From:')
+    cur_to = get_currency_input(currency_az, 'To:')
+
+    if cur_from.lower() == cur_to.lower():
         print('Currencies are same, please try again')
         continue
 
-    amount = float(input('How much? '))
+    amount = number_input("How much?")
 
-    m_from = amount * get_rate(cur1)
+    m_from = amount * currency_az.get_rate(cur_from)
 
-    rate = get_rate(cur2)
+    rate = currency_az.get_rate(cur_to)
 
-    print(round(m_from / rate, 2), cur2.upper())
+    print(round(m_from / rate, 2), cur_to.upper())
     yes_no = input('Do you want to continue? (y/n): ')
 
+print('bye...')
