@@ -5,12 +5,11 @@ from datetime import datetime
 
 class CurrencyAzSource:
 
-
     def is_alive(self):
-        pass
+        return bool(requests.get('http://currency.az'))
 
     def get_supported_currencies(self):
-        return ('AZN', 'USD', 'EUR', 'RUB')
+        return 'AZN', 'USD', 'EUR', 'RUB'
 
     def get_rate(self, currency):
         if currency.lower() == 'azn':
@@ -22,7 +21,6 @@ class CurrencyAzSource:
         match = re.search(pattern, content, re.IGNORECASE)
         result = match.group('rate')
         return float(result)
-
 
     def validate_currency(self, curr):
         if curr in self.get_supported_currencies():
@@ -55,10 +53,12 @@ class CentralBankSource:
         matches = re.findall(pattern, content, re.IGNORECASE)
         result = []
         for match in matches:
-            rate = {}
-            rate['code'] = match[0]
-            rate['name'] = match[1]
-            rate['rate'] = float(match[2])
+            code, name, rate = match
+            rate = {
+                'code': code,
+                'name': name,
+                'rate': float(rate)
+            }
             result.append(rate)
         return result
 
