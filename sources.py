@@ -77,7 +77,7 @@ class CentralBankSource:
         return bool(response)
 
     def validate_currency(self, curr):
-        if curr in self.get_supported_currencies():
+        if curr.upper() in self.get_supported_currencies():
             return True, 'valid'
         else:
             return False, f'There isn\'t any currency  type as {curr.upper()}. Try again'
