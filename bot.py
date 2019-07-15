@@ -1,3 +1,4 @@
+#!/usr/bin/env python3.7
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
 from sources import CentralBankSource
