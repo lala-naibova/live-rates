@@ -15,7 +15,7 @@ def say_hi(bot, update):
 
 
 def parse_msg(msg):
-    msg: str = msg[10:]
+    msg = msg[10:]
     money_index = msg.index(" ")
     money = msg[:money_index]
     from_index = msg.index(" ", money_index + 1)
